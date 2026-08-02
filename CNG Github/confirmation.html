@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Confirmation | CNG Booking System</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .receipt-card {
+      border: 2px dashed var(--primary);
+      border-radius: var(--radius);
+      padding: 2rem;
+      background: var(--card-bg);
+      margin: 2rem auto;
+      max-width: 480px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .receipt-card::before,
+    .receipt-card::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: var(--bg-color);
+      border-radius: 50%;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .receipt-card::before {
+      left: -10px;
+    }
+
+    .receipt-card::after {
+      right: -10px;
+    }
+
+    .receipt-header {
+      border-bottom: 2px dashed var(--border-color);
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.8rem;
+      font-size: 0.95rem;
+    }
+
+    .receipt-label {
+      font-weight: 500;
+      color: #777;
+    }
+
+    .receipt-value {
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .qr-container {
+      margin: 1.5rem auto 0;
+      width: 170px;
+      height: 170px;
+      background: white;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 8px;
+    }
+
+    /* Print optimizations */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      .receipt-card,
+      .receipt-card * {
+        visibility: visible;
+      }
+
+      .receipt-card {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        max-width: 100%;
+        border: none;
+        box-shadow: none;
+      }
+
+      .btn-group,
+      header,
+      footer,
+      .chatbot-widget {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <!-- Injected dynamically by header.js -->
+  </header>
+
+  <div class="container" style="max-width: 600px; text-align: center;">
+    <div class="success-icon"
+      style="font-size: 4.5rem; color: var(--primary); margin-bottom: 0.5rem; animation: zoomIn 0.5s ease;">✅</div>
+    <h2 style="color: var(--primary); margin-bottom: 0.5rem;">Booking Confirmed!</h2>
+    <p style="margin-bottom: 1.5rem;">Show the digital receipt QR code at the CNG station counter for queue priority.
+    </p>
+
+    <!-- Digital Receipt Card -->
+    <div class="receipt-card" id="receiptCard">
+      <div class="receipt-header">
+        <h3 style="color: var(--primary); margin-bottom: 0.25rem;">CNG FUEL PASS</h3>
+        <p style="font-size: 0.8rem; color: #777;" id="receiptId">Booking ID: CNG-BK-XXXXX</p>
+      </div>
+
+      <div class="receipt-row">
+        <span class="receipt-label">Customer Name:</span>
+        <span class="receipt-value" id="valName">-</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Vehicle Number:</span>
+        <span class="receipt-value" id="valVehicle">-</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">CNG Station:</span>
+        <span class="receipt-value" id="valPump">-</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Date Scheduled:</span>
+        <span class="receipt-value" id="valDate">-</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Time Slot:</span>
+        <span class="receipt-value" id="valTime">-</span>
+      </div>
+      <div class="receipt-row"
+        style="border-top: 1px solid var(--border-color); padding-top: 0.75rem; margin-top: 0.75rem;">
+        <span class="receipt-label">Refuel Advance paid:</span>
+        <span class="receipt-value" style="color: var(--primary); font-size:1.1rem;" id="valPrice">₹100.00</span>
+      </div>
+
+      <!-- QR Code Canvas -->
+      <div class="qr-container">
+        <canvas id="receiptQR" width="150" height="150"></canvas>
+      </div>
+      <p style="font-size:0.7rem; color:#999; margin-top:0.5rem;">Scan at pump reader for priority entry.</p>
+    </div>
+
+    <!-- Navigation actions -->
+    <div class="btn-group"
+      style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 2rem;">
+      <a href="details.html" class="btn">Go to Dashboard</a>
+      <button class="btn btn-secondary" onclick="window.print()">🖨️ Print Receipt</button>
+      <a href="booking.html" class="btn btn-secondary">Book Another Slot</a>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 CNG Booking System | Designed by K.Sai Mahesh</p>
+  </footer>
+
+  <script src="db.js"></script>
+  <script src="header.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Get booking ID from query string
+      const urlParams = new URLSearchParams(window.location.search);
+      const bookingId = urlParams.get("id");
+
+      if (!bookingId || !window.CNG_DB) {
+        window.showNotification("Error", "No booking details found.", () => {
+          window.location.href = "home.html";
+        });
+        return;
+      }
+
+      const booking = window.CNG_DB.getBookingById(bookingId);
+      if (!booking) {
+        window.showNotification("Error", "Invalid Booking reference.", () => {
+          window.location.href = "home.html";
+        });
+        return;
+      }
+
+      // Populate elements
+      document.getElementById("receiptId").textContent = "Booking ID: " + booking.id;
+      document.getElementById("valName").textContent = booking.fullname;
+      document.getElementById("valVehicle").textContent = booking.vehicleno;
+      document.getElementById("valPump").textContent = booking.pump;
+      document.getElementById("valDate").textContent = booking.date;
+      document.getElementById("valTime").textContent = booking.time;
+
+      // Draw custom visual QR code
+      generateQR(booking.id, booking.vehicleno, booking.pump, booking.time);
+    });
+
+    function generateQR(id, vehicleno, pump, time) {
+      const canvas = document.getElementById("receiptQR");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Base solid block
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, 150, 150);
+
+      // Inner white space
+      ctx.fillStyle = "white";
+      ctx.fillRect(8, 8, 134, 134);
+
+      // Anchor Squares (Standard QR pattern coordinates)
+      ctx.fillStyle = "black";
+
+      // Top Left anchor
+      ctx.fillRect(15, 15, 34, 34);
+      ctx.fillStyle = "white";
+      ctx.fillRect(20, 20, 24, 24);
+      ctx.fillStyle = "black";
+      ctx.fillRect(25, 25, 14, 14);
+
+      // Top Right anchor
+      ctx.fillRect(101, 15, 34, 34);
+      ctx.fillStyle = "white";
+      ctx.fillRect(106, 20, 24, 24);
+      ctx.fillStyle = "black";
+      ctx.fillRect(111, 25, 14, 14);
+
+      // Bottom Left anchor
+      ctx.fillRect(15, 101, 34, 34);
+      ctx.fillStyle = "white";
+      ctx.fillRect(20, 106, 24, 24);
+      ctx.fillStyle = "black";
+      ctx.fillRect(25, 111, 14, 14);
+
+      // Bottom Right small alignment anchor
+      ctx.fillRect(109, 109, 14, 14);
+      ctx.fillStyle = "white";
+      ctx.fillRect(113, 113, 6, 6);
+      ctx.fillStyle = "black";
+      ctx.fillRect(115, 115, 2, 2);
+
+      // Generate seed hash based on booking parameters to draw pseudo-random dots
+      const seedString = `${id}-${vehicleno}-${pump}-${time}`;
+      let hash = 0;
+      for (let i = 0; i < seedString.length; i++) {
+        hash = seedString.charCodeAt(i) + ((hash << 5) - hash);
+      }
+
+      // Render deterministic dot matrix pattern based on seed hash
+      ctx.fillStyle = "black";
+      for (let x = 54; x < 96; x += 6) {
+        for (let y = 15; y < 96; y += 6) {
+          const pseudoRandom = Math.abs(Math.sin(hash + x * y));
+          if (pseudoRandom > 0.45) {
+            ctx.fillRect(x, y, 4, 4);
+          }
+        }
+      }
+      for (let x = 15; x < 135; x += 6) {
+        for (let y = 96; y < 135; y += 6) {
+          // Exclude bottom-left anchor area and bottom-right alignment anchor
+          if (x < 54 && y > 96) continue;
+          if (x > 101 && y > 101) continue;
+
+          const pseudoRandom = Math.abs(Math.cos(hash + x * y));
+          if (pseudoRandom > 0.45) {
+            ctx.fillRect(x, y, 4, 4);
+          }
+        }
+      }
+
+      // Core green branding badge
+      ctx.fillStyle = "#2e8b57";
+      ctx.fillRect(66, 66, 18, 18);
+
+      // Draw a tiny white gas icon "G" on the center badge
+      ctx.fillStyle = "white";
+      ctx.font = "bold 12px sans-serif";
+      ctx.fillText("C", 71, 80);
+    }
+  </script>
+</body>
+
+</html>

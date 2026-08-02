@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Support | CNG Booking System</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .faq-search {
+      width: 100%;
+      padding: 0.85rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      font-size: 1rem;
+    }
+
+    .faq-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .faq-question {
+      padding: 1.1rem;
+      font-weight: 700;
+      color: var(--primary);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      transition: background-color 0.3s;
+    }
+
+    .faq-question:hover {
+      background-color: var(--primary-light);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      padding: 0 1.1rem;
+      transition: all 0.3s cubic-bezier(0, 1, 0, 1);
+      color: var(--text-color);
+      opacity: 0.9;
+    }
+
+    .faq-item.active .faq-answer {
+      max-height: 1000px;
+      padding: 1.1rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .faq-question::after {
+      content: '▼';
+      font-size: 0.8rem;
+      transition: transform 0.3s;
+    }
+
+    .faq-item.active .faq-question::after {
+      transform: rotate(-180deg);
+    }
+
+    .support-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .ticket-card {
+      background: var(--primary-light);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .support-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <!-- Injected dynamically by header.js -->
+  </header>
+
+  <div class="container" style="max-width: 1000px;">
+    <h2 style="text-align: center; color: var(--primary); margin-bottom: 2rem;">Customer Support Center</h2>
+
+    <div class="support-layout">
+      <!-- FAQ Left side Accordions -->
+      <div>
+        <h3 style="color: var(--primary); margin-bottom: 1rem;">Frequently Asked Questions</h3>
+        <input type="text" id="faqSearch" class="faq-search" placeholder="Type key terms to search FAQs...">
+
+        <div id="faqAccordionGroup">
+          <div class="faq-item">
+            <div class="faq-question">How do I book a CNG slot?</div>
+            <div class="faq-answer">
+              To book a slot: Login to your account, search for nearby pumps using our Locator map, select your
+              preferred pump, pick an available 15-minute slot date & time on the booking panel, complete mock payment,
+              and retrieve your ticket QR code.
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question">Can I cancel or reschedule my booking?</div>
+            <div class="faq-answer">
+              Yes. You can manage, review, and cancel active slots anytime from the "Dashboard / History" page. Clicking
+              the cancel button frees up the pump queue instantly and initiates deposit refund simulation.
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question">What payment methods are supported?</div>
+            <div class="faq-answer">
+              We support simulated UPI QR code scans and debit/credit card entries. A small refuel advance deposit of
+              ₹100 is processed mock-safely to secure the slot timing.
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question">What happens if I arrive late for my slot?</div>
+            <div class="faq-answer">
+              We hold priority slots for up to 10 minutes past the scheduled time. If you exceed this grace period, your
+              booking will remain active but you may experience slightly longer queues at the station.
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question">Are queue waiting times real?</div>
+            <div class="faq-answer">
+              Yes, our system estimates current queues by tracking active bookings at each station and simulating live
+              arrival fluctuations dynamically every few seconds.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Support Ticket Logging Right side -->
+      <div>
+        <h3 style="color: var(--primary); margin-bottom: 1rem;">Log Support Ticket</h3>
+
+        <form id="supportForm" novalidate>
+          <label for="supName">Name:</label>
+          <input type="text" id="supName" required placeholder="Enter name">
+
+          <label for="supEmail">Email:</label>
+          <input type="email" id="supEmail" required placeholder="name@domain.com">
+
+          <label for="supFeedback">Your Feedback / Issue:</label>
+          <textarea id="supFeedback" rows="5" required placeholder="Describe your issue or query here..."></textarea>
+
+          <button type="submit" class="btn">Submit Ticket</button>
+        </form>
+
+        <!-- Dynamic User Tickets Dashboard -->
+        <div id="userTicketsSection" style="margin-top: 2rem; display: none;">
+          <h4
+            style="color: var(--primary); margin-bottom: 1rem; border-top: 1.5px solid var(--border-color); padding-top: 1.5rem;">
+            Your Logged Queries</h4>
+          <div id="ticketsContainer">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 CNG Booking System | Designed by K.Sai Mahesh</p>
+  </footer>
+
+  <script src="db.js"></script>
+  <script src="header.js"></script>
+  <script>
+    const user = window.CNG_DB ? window.CNG_DB.getLoggedInUser() : null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Accordion toggle events
+      const faqItems = document.querySelectorAll(".faq-item");
+      faqItems.forEach(item => {
+        const question = item.querySelector(".faq-question");
+        question.addEventListener("click", () => {
+          const isActive = item.classList.contains("active");
+          faqItems.forEach(i => i.classList.remove("active"));
+          if (!isActive) {
+            item.classList.add("active");
+          }
+        });
+      });
+
+      // Accordion Search Filter
+      const searchInput = document.getElementById("faqSearch");
+      searchInput.addEventListener("input", () => {
+        const term = searchInput.value.toLowerCase();
+        faqItems.forEach(item => {
+          const text = item.textContent.toLowerCase();
+          if (text.includes(term)) {
+            item.style.display = "block";
+          } else {
+            item.style.display = "none";
+          }
+        });
+      });
+
+      // Pre-fill profile details if logged in
+      if (user) {
+        document.getElementById("supName").value = user.fullname;
+        document.getElementById("supEmail").value = user.email;
+        document.getElementById("supName").readOnly = true;
+        document.getElementById("supEmail").readOnly = true;
+
+        // Show tickets
+        document.getElementById("userTicketsSection").style.display = "block";
+        renderUserTickets();
+      }
+
+      // Handle Support Log Form submit
+      const form = document.getElementById("supportForm");
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById("supName").value.trim();
+        const email = document.getElementById("supEmail").value.trim();
+        const feedback = document.getElementById("supFeedback").value.trim();
+
+        if (!name || !email || !feedback) {
+          window.showNotification("Required Form Errors", "Please fill in all ticket details.");
+          return;
+        }
+
+        const ticket = window.CNG_DB.addTicket(name, email, feedback);
+
+        window.showNotification("✅ Ticket Logged", `Thank you, ${name}. Your ticket (${ticket.id}) has been created successfully. Our support desk will look into it.`, () => {
+          document.getElementById("supFeedback").value = "";
+          renderUserTickets();
+
+          // Trigger a mock auto-reply simulation after 5 seconds
+          simulateSupportReply(ticket.id);
+        });
+      });
+    });
+
+    function renderUserTickets() {
+      if (!user || !window.CNG_DB) return;
+
+      const tickets = window.CNG_DB.getTickets(user.username);
+      const container = document.getElementById("ticketsContainer");
+      container.innerHTML = "";
+
+      if (tickets.length === 0) {
+        container.innerHTML = `<p style="font-size:0.9rem; color:#777;">You have not logged any queries yet.</p>`;
+        return;
+      }
+
+      // Newest first
+      tickets.reverse();
+
+      tickets.forEach(t => {
+        const statusBadge = t.status === "Open"
+          ? `<span class="badge pending" style="font-size:0.7rem; padding:0.15rem 0.5rem;">Open</span>`
+          : `<span class="badge yes" style="font-size:0.7rem; padding:0.15rem 0.5rem;">Resolved</span>`;
+
+        const replyHTML = t.reply
+          ? `<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-color); font-size: 0.85rem; color: var(--primary-dark);">
+              <strong>Desk Reply:</strong> ${t.reply}
+             </div>`
+          : "";
+
+        const ticketDiv = document.createElement("div");
+        ticketDiv.className = "ticket-card";
+        ticketDiv.innerHTML = `
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+            <span style="font-family:monospace; font-weight:bold; font-size:0.85rem;">${t.id} (${t.date})</span>
+            ${statusBadge}
+          </div>
+          <p style="font-size:0.9rem; font-style:italic;">"${t.feedback}"</p>
+          ${replyHTML}
+        `;
+        container.appendChild(ticketDiv);
+      });
+    }
+
+    function simulateSupportReply(ticketId) {
+      setTimeout(() => {
+        if (!window.CNG_DB) return;
+        const allTickets = JSON.parse(localStorage.getItem("cng_tickets")) || [];
+        const ticket = allTickets.find(t => t.id === ticketId);
+
+        if (ticket) {
+          ticket.status = "Resolved";
+          ticket.reply = "We verified your transaction details. The refuel schedule matches correctly with the Ameerpet HP location. Looking forward to refueling your vehicle!";
+          localStorage.setItem("cng_tickets", JSON.stringify(allTickets));
+
+          // Re-render
+          renderUserTickets();
+        }
+      }, 7000);
+    }
+  </script>
+</body>
+
+</html>

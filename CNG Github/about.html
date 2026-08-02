@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About | CNG Booking System</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .story-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 2.2rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+      transition: var(--transition);
+    }
+
+    .story-card:hover {
+      box-shadow: var(--shadow-hover);
+      border-color: var(--primary);
+    }
+
+    .story-card h2 {
+      color: var(--primary);
+      margin-bottom: 1rem;
+      font-size: 1.6rem;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .member-card {
+      background: var(--card-bg);
+      padding: 2rem 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1.5px solid var(--border-color);
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .member-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--primary);
+    }
+
+    .member-card .member-avatar {
+      width: 70px;
+      height: 70px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      font-size: 2.2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem;
+    }
+
+    .member-card h3 {
+      color: var(--primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .member-card p {
+      font-size: 0.9rem;
+      color: #777;
+      font-weight: 500;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <!-- Injected dynamically by header.js -->
+  </header>
+
+  <section>
+    <h2 class="section-title">About CNG Booking System</h2>
+
+    <div class="story-card">
+      <h2>Our Story</h2>
+      <p>
+        The CNG Booking System was developed by <strong>Sai Developers</strong> as part of a school FA project.
+        The inspiration came from seeing long queues of taxis and private autos waiting for CNG late at night on
+        Hyderabad roads.
+        Our mission is simple: help drivers save valuable time and fuel by allowing them to check queues and book
+        priority slots in advance.
+      </p>
+    </div>
+
+    <div class="story-card">
+      <h2>Our Mission</h2>
+      <p>
+        We aim to modernize the CNG refueling experience through technology.
+        By reducing waiting times and optimizing refueling schedules,
+        this system not only makes life easier for commercial and private drivers but also contributes to a more
+        efficient, orderly, and eco-friendly clean energy transport ecosystem.
+      </p>
+    </div>
+
+    <div class="story-card">
+      <h2>Project Highlights</h2>
+      <ul style="padding-left: 1.5rem; line-height: 1.8;">
+        <li><strong>Queue Optimization:</strong> Real-time estimation of wait lines based on slot distribution.</li>
+        <li><strong>Priority Refueling:</strong> Check-in QR pass system allowing rapid validation.</li>
+        <li><strong>Reduced Emissions:</strong> Decreasing vehicle idling times while waiting in queues.</li>
+        <li><strong>Convenience & Security:</strong> Mock UPI/Card advance checkout options.</li>
+      </ul>
+    </div>
+
+    <h2 class="section-title" style="margin-top: 3rem;">Meet the Team</h2>
+    <div class="team-grid">
+      <div class="member-card">
+        <div class="member-avatar">👨‍💻</div>
+        <h3>Karre Sai Mahesh</h3>
+        <p>Project Lead Designer & Developer</p>
+      </div>
+      <div class="member-card">
+        <div class="member-avatar">👥</div>
+        <h3>Sai Developers</h3>
+        <p>Collaborators & Contributors</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2024 CNG Booking System | Designed by K.Sai Mahesh </p>
+  </footer>
+
+  <script src="db.js"></script>
+  <script src="header.js"></script>
+</body>
+
+</html>

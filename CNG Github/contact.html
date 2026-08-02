@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us | CNG Booking System</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .contact-card {
+      background: var(--primary-light);
+      padding: 1.75rem;
+      border-radius: var(--radius);
+      text-align: center;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+      transition: var(--transition);
+    }
+
+    .contact-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--primary);
+    }
+
+    .contact-card h3 {
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      font-size: 1.25rem;
+    }
+
+    .contact-card p {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+
+    .map-container {
+      margin-top: 2.5rem;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1.5px solid var(--border-color);
+    }
+
+    .map-container iframe {
+      width: 100%;
+      height: 350px;
+      border: none;
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <!-- Injected dynamically by header.js -->
+  </header>
+
+  <div class="container" style="max-width: 900px;">
+    <h2 style="text-align: center; color: var(--primary); margin-bottom: 2rem;">Contact Us</h2>
+
+    <!-- Contact Info Cards -->
+    <div class="contact-grid">
+      <div class="contact-card">
+        <h3>✉️ Email</h3>
+        <p>support@cngbookingsystem.com</p>
+      </div>
+      <div class="contact-card">
+        <h3>📞 Phone</h3>
+        <p>+91-6301069563</p>
+      </div>
+      <div class="contact-card">
+        <h3>📍 Address</h3>
+        <p>Hyderabad, Telangana, India</p>
+      </div>
+    </div>
+
+    <!-- Contact Form -->
+    <form id="contactForm" novalidate>
+      <label for="contactName">Your Name:</label>
+      <input type="text" id="contactName" required placeholder="Enter your full name">
+
+      <label for="contactEmail">Your Email:</label>
+      <input type="email" id="contactEmail" required placeholder="name@domain.com">
+
+      <label for="contactMsg">Message:</label>
+      <textarea id="contactMsg" rows="5" required placeholder="Type your message details here..."></textarea>
+
+      <button type="submit" class="btn" style="width:100%;">Send Message</button>
+    </form>
+
+    <!-- Map section -->
+    <div class="map-container">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.6196824366787!2d78.48667171487658!3d17.385044088074486!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb978ae38c5a5d%3A0xd4f8b9c6e038f9a5!2sHyderabad%2C%20Telangana%2C%20India!5e0!3m2!1sen!2sin!4v1700000000000"
+        allowfullscreen="" loading="lazy"></iframe>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 CNG Booking System | Designed by K.Sai Mahesh</p>
+  </footer>
+
+  <script src="db.js"></script>
+  <script src="header.js"></script>
+  <script>
+    const user = window.CNG_DB ? window.CNG_DB.getLoggedInUser() : null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Auto fill if logged in
+      if (user) {
+        document.getElementById("contactName").value = user.fullname;
+        document.getElementById("contactEmail").value = user.email;
+        document.getElementById("contactName").readOnly = true;
+        document.getElementById("contactEmail").readOnly = true;
+      }
+
+      const form = document.getElementById("contactForm");
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById("contactName").value.trim();
+        const email = document.getElementById("contactEmail").value.trim();
+        const msg = document.getElementById("contactMsg").value.trim();
+
+        if (!name || !email || !msg) {
+          window.showNotification("Form Error", "Please fill in all inputs before sending.");
+          return;
+        }
+
+        // Save mock message log
+        const contactLogs = JSON.parse(localStorage.getItem("cng_contact_messages")) || [];
+        contactLogs.push({
+          name, email, message: msg, date: new Date().toISOString()
+        });
+        localStorage.setItem("cng_contact_messages", JSON.stringify(contactLogs));
+
+        window.showNotification("Message Sent!", `Thank you, ${name}. Your message has been sent successfully. We will reply to ${email} shortly.`, () => {
+          document.getElementById("contactMsg").value = "";
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>

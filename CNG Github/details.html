@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Dashboard & History | CNG Booking System</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .profile-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+      height: fit-content;
+    }
+
+    .profile-card h3 {
+      color: var(--primary);
+      margin-bottom: 1rem;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    .profile-detail {
+      margin-bottom: 1rem;
+    }
+
+    .profile-detail span {
+      display: block;
+      font-size: 0.85rem;
+      color: #777;
+    }
+
+    .profile-detail strong {
+      font-size: 1.05rem;
+      color: var(--text-color);
+    }
+
+    .stats-card {
+      background: var(--primary-light);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      border: 1.5px dashed var(--primary);
+    }
+
+    .countdown-banner {
+      background: #e6f7eb;
+      border: 2px solid var(--primary);
+      color: var(--primary-dark);
+      padding: 1.25rem;
+      border-radius: var(--radius);
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: fadeIn 0.6s ease;
+    }
+
+    [data-theme="dark"] .countdown-banner {
+      background: #182c20;
+      color: #74d69b;
+    }
+
+    .countdown-timer {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .history-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .tab-btn {
+      padding: 0.5rem 1rem;
+      border: 1.5px solid var(--border-color);
+      background: var(--card-bg);
+      color: var(--text-color);
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: var(--transition);
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .countdown-banner {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <!-- Injected dynamically by header.js -->
+  </header>
+
+  <section>
+    <h2 class="section-title">Dashboard & History</h2>
+
+    <!-- Dynamic Countdown Banner (shown when active bookings exist) -->
+    <div class="countdown-banner" id="countdownBanner" style="display: none;">
+      <div>
+        <h4 style="margin: 0; font-size:1.1rem;" id="countdownTitle">Active Fuel Ticket Pending</h4>
+        <p style="margin: 0; font-size: 0.85rem;" id="countdownLocation">HP Petrol Pump - Ameerpet</p>
+      </div>
+      <div>
+        <span
+          style="font-size: 0.8rem; display: block; text-transform: uppercase; font-weight: bold; opacity:0.8;">Arrival
+          Countdown</span>
+        <div class="countdown-timer" id="countdownTimer">00:00:00</div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Sidebar Profile & Eco Offset Stats -->
+      <div>
+        <div class="profile-card">
+          <h3>Your Profile</h3>
+          <div class="profile-detail">
+            <span>Name</span>
+            <strong id="profName">-</strong>
+          </div>
+          <div class="profile-detail">
+            <span>Contact Number</span>
+            <strong id="profContact">-</strong>
+          </div>
+          <div class="profile-detail">
+            <span>Email</span>
+            <strong id="profEmail">-</strong>
+          </div>
+          <div class="profile-detail">
+            <span>Vehicle Registration Number</span>
+            <strong id="profVehicle" style="font-family: monospace; letter-spacing: 0.5px;">-</strong>
+          </div>
+
+          <div class="stats-card">
+            <h4 style="color: var(--primary); margin-bottom: 0.75rem;">Your Green Stats 🍃</h4>
+            <div style="display:flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+              <span>Time Saved:</span>
+              <strong id="statSavedTime" style="color: var(--primary-dark);">0 mins</strong>
+            </div>
+            <div style="display:flex; justify-content: space-between; font-size: 0.9rem;">
+              <span>CO₂ Offset:</span>
+              <strong id="statSavedCO2" style="color: var(--primary-dark);">0.0 kg</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Booking History List Table -->
+      <div>
+        <div class="history-tabs">
+          <button class="tab-btn active" onclick="filterHistory('All', this)">All slots</button>
+          <button class="tab-btn" onclick="filterHistory('Confirmed', this)">Confirmed</button>
+          <button class="tab-btn" onclick="filterHistory('Cancelled', this)">Cancelled</button>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table id="bookingsTable">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Date</th>
+                <th>Time Slot</th>
+                <th>CNG Pump</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bookingsBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2024 CNG Booking System | Designed by K.Sai Mahesh</p>
+  </footer>
+
+  <script src="db.js"></script>
+  <script src="header.js"></script>
+  <script>
+    let activeTimerInterval = null;
+    let currentFilter = "All";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const user = window.CNG_DB ? window.CNG_DB.getLoggedInUser() : null;
+      if (!user) {
+        window.location.href = "login_register.html";
+        return;
+      }
+
+      // Populate profile card
+      document.getElementById("profName").textContent = user.fullname;
+      document.getElementById("profContact").textContent = user.contact;
+      document.getElementById("profEmail").textContent = user.email;
+      document.getElementById("profVehicle").textContent = user.vehicleno;
+
+      // Populate history lists
+      loadBookingsList();
+
+      // Countdown trigger
+      updateCountdown();
+    });
+
+    function loadBookingsList() {
+      const user = window.CNG_DB.getLoggedInUser();
+      const bookings = window.CNG_DB.getBookings(user.username);
+      const tbody = document.getElementById("bookingsBody");
+      tbody.innerHTML = "";
+
+      // Sort bookings: newest first
+      bookings.sort((a, b) => {
+        return new Date(b.date + "T" + convertTo24h(b.time)).getTime() - new Date(a.date + "T" + convertTo24h(a.time)).getTime();
+      });
+
+      // Stats aggregation
+      const confirmedCount = bookings.filter(b => b.status === "Confirmed").length;
+      document.getElementById("statSavedTime").textContent = `${confirmedCount * 25} mins`;
+      document.getElementById("statSavedCO2").textContent = `${(confirmedCount * 1.45).toFixed(2)} kg`;
+
+      const filteredBookings = bookings.filter(b => currentFilter === "All" || b.status === currentFilter);
+
+      if (filteredBookings.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#777;">No slots found.</td></tr>`;
+        return;
+      }
+
+      filteredBookings.forEach(b => {
+        const row = document.createElement("tr");
+        const statusBadge = `<span class="badge ${b.status.toLowerCase()}">${b.status}</span>`;
+
+        let actionButtons = "";
+        if (b.status === "Confirmed") {
+          actionButtons = `
+            <a href="confirmation.html?id=${b.id}" class="btn" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; margin-right: 5px;">Ticket</a>
+            <button onclick="cancelSlot('${b.id}')" class="btn btn-danger" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;">Cancel</button>
+          `;
+        } else {
+          actionButtons = `<span style="color:#777; font-size:0.85rem;">None</span>`;
+        }
+
+        row.innerHTML = `
+          <td data-label="Booking ID" style="font-family:monospace; font-weight:bold;">${b.id}</td>
+          <td data-label="Date">${b.date}</td>
+          <td data-label="Time Slot">${b.time}</td>
+          <td data-label="CNG Pump">${b.pump}</td>
+          <td data-label="Status">${statusBadge}</td>
+          <td data-label="Actions">${actionButtons}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    window.filterHistory = function (filterVal, btn) {
+      currentFilter = filterVal;
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      loadBookingsList();
+    };
+
+    window.cancelSlot = function (id) {
+      if (confirm("Are you sure you want to cancel this booking? The ₹100 deposit will be refunded to your account.")) {
+        const result = window.CNG_DB.cancelBooking(id);
+        if (result.success) {
+          window.showNotification("Cancelled", "Your booking has been cancelled and wait queues adjusted.", () => {
+            loadBookingsList();
+            updateCountdown();
+          });
+        }
+      }
+    };
+
+    function updateCountdown() {
+      if (activeTimerInterval) {
+        clearInterval(activeTimerInterval);
+      }
+
+      const user = window.CNG_DB.getLoggedInUser();
+      const bookings = window.CNG_DB.getBookings(user.username);
+      const active = bookings.filter(b => b.status === "Confirmed");
+
+      if (active.length === 0) {
+        document.getElementById("countdownBanner").style.display = "none";
+        return;
+      }
+
+      // Find the booking closest to now (scheduled for the future)
+      const now = Date.now();
+      let nextBooking = null;
+      let minDiff = Infinity;
+
+      active.forEach(b => {
+        const schedTime = new Date(`${b.date}T${convertTo24h(b.time)}`).getTime();
+        const diff = schedTime - now;
+        if (diff > 0 && diff < minDiff) {
+          minDiff = diff;
+          nextBooking = b;
+        }
+      });
+
+      if (!nextBooking) {
+        document.getElementById("countdownBanner").style.display = "none";
+        return;
+      }
+
+      document.getElementById("countdownLocation").textContent = nextBooking.pump;
+      document.getElementById("countdownBanner").style.display = "flex";
+
+      const targetTime = new Date(`${nextBooking.date}T${convertTo24h(nextBooking.time)}`).getTime();
+
+      const runTimer = () => {
+        const current = Date.now();
+        const remaining = targetTime - current;
+
+        if (remaining <= 0) {
+          document.getElementById("countdownTimer").textContent = "00:00:00";
+          document.getElementById("countdownTitle").textContent = "Time to Refuel! Arrive at station";
+          clearInterval(activeTimerInterval);
+          return;
+        }
+
+        const hrs = Math.floor(remaining / (1000 * 60 * 60));
+        const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((remaining % (1000 * 60)) / 1000);
+
+        const doubleDigits = (num) => String(num).padStart(2, "0");
+        document.getElementById("countdownTimer").textContent = `${doubleDigits(hrs)}:${doubleDigits(mins)}:${doubleDigits(secs)}`;
+      };
+
+      runTimer();
+      activeTimerInterval = setInterval(runTimer, 1000);
+    }
+
+    function convertTo24h(timeStr) {
+      if (!timeStr) return "00:00";
+      if (!timeStr.includes("AM") && !timeStr.includes("PM")) {
+        return timeStr;
+      }
+      const [time, modifier] = timeStr.split(" ");
+      let [hours, minutes] = time.split(":");
+      if (hours === "12") {
+        hours = "00";
+      }
+      if (modifier === "PM") {
+        hours = parseInt(hours, 10) + 12;
+      }
+      return `${hours}:${minutes}`;
+    }
+  </script>
+</body>
+
+</html>

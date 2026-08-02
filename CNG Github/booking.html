@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Slot | CNG Booking System</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .slot-grid-title {
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+    }
+
+    .slot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+
+    .slot-btn {
+      background: var(--card-bg);
+      border: 2px solid var(--border-color);
+      color: var(--text-color);
+      padding: 0.65rem 0.5rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .slot-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .slot-btn.selected {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 8px rgba(46, 139, 87, 0.25);
+    }
+
+    .slot-btn:disabled {
+      background: rgba(0, 0, 0, 0.05);
+      border-color: var(--border-color);
+      color: #999999;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+
+    [data-theme="dark"] .slot-btn:disabled {
+      background: rgba(255, 255, 255, 0.03);
+      color: #555555;
+    }
+
+    /* Checkout modal */
+    .checkout-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1001;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .checkout-content {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 450px;
+      text-align: center;
+      border: 1px solid var(--border-color);
+      animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .checkout-content h3 {
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .card-fields {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-fields label {
+      margin-bottom: 2px;
+    }
+
+    .card-fields input {
+      margin-bottom: 10px;
+    }
+
+    .upi-qr-box {
+      margin: 1.5rem auto;
+      width: 160px;
+      height: 160px;
+      background: white;
+      border: 4px solid var(--primary);
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <!-- Injected dynamically by header.js -->
+  </header>
+
+  <div class="container" style="max-width: 700px;">
+    <h2 style="text-align: center; color: var(--primary); margin-bottom: 1.5rem;">Book Your CNG Slot</h2>
+
+    <!-- Steps Indicator -->
+    <div class="steps-container">
+      <div class="step-node completed">
+        <div class="circle">1</div>
+        <div class="label">Register</div>
+      </div>
+      <div class="step-node completed">
+        <div class="circle">2</div>
+        <div class="label">Locate</div>
+      </div>
+      <div class="step-node active">
+        <div class="circle">3</div>
+        <div class="label">Book Slot</div>
+      </div>
+      <div class="step-node">
+        <div class="circle">4</div>
+        <div class="label">Confirm</div>
+      </div>
+    </div>
+
+    <!-- Check Login state alert banner -->
+    <div id="loginAlertBanner"
+      style="display: none; background: #fff3cd; border: 1.5px solid #ffeeba; color: #856404; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center; font-weight: bold;">
+      ⚠️ You must be logged in to book a slot. <a href="login_register.html"
+        style="color: var(--primary-dark); text-decoration: underline;">Login / Register here</a>
+    </div>
+
+    <form id="bookingForm" novalidate>
+      <label for="fullname">Full Name:</label>
+      <input type="text" id="fullname" name="fullname" required readonly placeholder="Name loads from profile">
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div>
+          <label for="contact">Contact Number:</label>
+          <input type="tel" id="contact" name="contact" required readonly placeholder="Contact loads from profile">
+        </div>
+        <div>
+          <label for="vehicleno">Vehicle Number:</label>
+          <input type="text" id="vehicleno" name="vehicleno" required readonly
+            placeholder="Vehicle plate loads from profile">
+        </div>
+      </div>
+
+      <label for="pumpSelect">Select CNG Station:</label>
+      <select id="pumpSelect" name="pumpSelect" required>
+        <option value="">-- Choose CNG Pump --</option>
+      </select>
+
+      <label for="dateSelect">Select Date:</label>
+      <input type="date" id="dateSelect" name="dateSelect" required>
+
+      <!-- Dynamic Time Slot selection Grid -->
+      <div id="slotGridSection" style="display:none;">
+        <p class="slot-grid-title">Select Available Time Slot (15-min intervals):</p>
+        <div class="slot-grid" id="slotGrid">
+          <!-- Populated dynamically based on date & pump selections -->
+        </div>
+      </div>
+
+      <label for="paymentSelect">Payment Method:</label>
+      <select id="paymentSelect" name="paymentSelect" required>
+        <option value="">-- Choose Payment Method --</option>
+        <option value="UPI">UPI (Scan simulated QR)</option>
+        <option value="Card">Debit/Credit Card</option>
+      </select>
+
+      <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">Process Booking</button>
+    </form>
+  </div>
+
+  <!-- Simulated Payment Checkout Modal -->
+  <div class="checkout-modal" id="checkoutModal">
+    <div class="checkout-content">
+      <h3 id="checkoutTitle">Secure Payment</h3>
+      <p id="checkoutSummary" style="font-size:0.95rem; margin-bottom: 1rem;"></p>
+
+      <!-- Card Fields Simulator -->
+      <div class="card-fields" id="cardInputs" style="display: none;">
+        <label for="cardNum">Card Number:</label>
+        <input type="text" id="cardNum" placeholder="16-digit card number" maxlength="16">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+          <div>
+            <label for="cardExpiry">Expiry Date:</label>
+            <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5">
+          </div>
+          <div>
+            <label for="cardCVV">CVV:</label>
+            <input type="password" id="cardCVV" placeholder="123" maxlength="3">
+          </div>
+        </div>
+      </div>
+
+      <!-- UPI QR Code Simulator -->
+      <div id="upiQR" style="display: none;">
+        <p style="font-size:0.85rem; color:#777;">Scan the secure QR code using any UPI app (GPay, PhonePe, Paytm):</p>
+        <div class="upi-qr-box">
+          <!-- Pure Canvas Custom QR rendering -->
+          <canvas id="upiQRCanvas" width="140" height="140"></canvas>
+        </div>
+        <p style="font-weight: bold; color: var(--primary);">₹100.00 Refuel Advance</p>
+      </div>
+
+      <div style="display:flex; gap: 10px; margin-top: 1.5rem;">
+        <button class="btn btn-secondary" id="cancelPayBtn" style="flex:1;">Cancel</button>
+        <button class="btn" id="confirmPayBtn" style="flex:2;">Confirm Payment</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 CNG Booking System | Designed by K.Sai Mahesh</p>
+  </footer>
+
+  <script src="db.js"></script>
+  <script src="header.js"></script>
+  <script>
+    const user = window.CNG_DB ? window.CNG_DB.getLoggedInUser() : null;
+    const pumpSelect = document.getElementById("pumpSelect");
+    const dateSelect = document.getElementById("dateSelect");
+    const slotGridSection = document.getElementById("slotGridSection");
+    const slotGrid = document.getElementById("slotGrid");
+    const bookingForm = document.getElementById("bookingForm");
+    const loginAlertBanner = document.getElementById("loginAlertBanner");
+
+    const checkoutModal = document.getElementById("checkoutModal");
+    const checkoutSummary = document.getElementById("checkoutSummary");
+    const cardInputs = document.getElementById("cardInputs");
+    const upiQR = document.getElementById("upiQR");
+    const cancelPayBtn = document.getElementById("cancelPayBtn");
+    const confirmPayBtn = document.getElementById("confirmPayBtn");
+
+    let selectedTimeSlot = null;
+
+    // Available mock time slots for booking (from 8 AM to 8 PM)
+    const timeSlots = [
+      "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
+      "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "01:00 PM", "01:30 PM",
+      "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM",
+      "05:00 PM", "05:30 PM", "06:00 PM", "06:30 PM", "07:00 PM", "07:30 PM"
+    ];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Set min date constraint to today
+      const today = new Date().toISOString().split("T")[0];
+      dateSelect.setAttribute("min", today);
+      dateSelect.value = today;
+
+      // Check login status
+      if (user) {
+        document.getElementById("fullname").value = user.fullname;
+        document.getElementById("contact").value = user.contact;
+        document.getElementById("vehicleno").value = user.vehicleno;
+      } else {
+        loginAlertBanner.style.display = "block";
+        bookingForm.querySelectorAll("input, select, button").forEach(el => el.disabled = true);
+      }
+
+      // Populate Pumps list
+      if (window.CNG_DB) {
+        const pumps = window.CNG_DB.getPumps();
+        const activeSelectedPump = window.CNG_DB.getSelectedPump();
+
+        pumps.forEach(pump => {
+          const option = document.createElement("option");
+          option.value = pump.name;
+          option.textContent = `${pump.name} (Wait list: ${pump.queue} vehicles)`;
+          if (!pump.available) {
+            option.disabled = true;
+            option.textContent += " - UNAVAILABLE";
+          }
+          pumpSelect.appendChild(option);
+        });
+
+        // Pre-select if navigated from Pump locator
+        if (activeSelectedPump) {
+          pumpSelect.value = activeSelectedPump;
+          // Clear so it doesn't stick next time
+          localStorage.removeItem("selectedPump");
+        }
+      }
+
+      // Hook slot grid update triggers
+      pumpSelect.addEventListener("change", renderTimeSlots);
+      dateSelect.addEventListener("change", renderTimeSlots);
+
+      // Load initial time slots if pump is selected
+      if (pumpSelect.value) {
+        renderTimeSlots();
+      }
+    });
+
+    function renderTimeSlots() {
+      const selectedPump = pumpSelect.value;
+      const selectedDate = dateSelect.value;
+
+      if (!selectedPump || !selectedDate) {
+        slotGridSection.style.display = "none";
+        return;
+      }
+
+      slotGrid.innerHTML = "";
+      selectedTimeSlot = null;
+
+      // Get bookings from mock db to find already booked slots
+      const allBookings = window.CNG_DB ? window.CNG_DB.getBookings("") : []; // gets all user bookings check
+      const bookingsForThisPumpAndDate = allBookings.filter(b =>
+        b.pump === selectedPump &&
+        b.date === selectedDate &&
+        b.status === "Confirmed"
+      );
+
+      timeSlots.forEach(time => {
+        const isBooked = bookingsForThisPumpAndDate.some(b => b.time === time);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "slot-btn";
+        button.textContent = time;
+        if (isBooked) {
+          button.disabled = true;
+        } else {
+          button.addEventListener("click", () => {
+            document.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("selected"));
+            button.classList.add("selected");
+            selectedTimeSlot = time;
+          });
+        }
+        slotGrid.appendChild(button);
+      });
+
+      slotGridSection.style.display = "block";
+    }
+
+    // Submit Action & Checkout trigger
+    bookingForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      if (!user) {
+        window.showNotification("Access Denied", "Please sign in to complete your booking.");
+        return;
+      }
+
+      const pump = pumpSelect.value;
+      const date = dateSelect.value;
+      const payment = document.getElementById("paymentSelect").value;
+
+      if (!pump) {
+        window.showNotification("Input Error", "Please select a CNG Station.");
+        return;
+      }
+      if (!date) {
+        window.showNotification("Input Error", "Please select a Date.");
+        return;
+      }
+      if (!selectedTimeSlot) {
+        window.showNotification("Input Error", "Please select an available Time Slot from the grid.");
+        return;
+      }
+      if (!payment) {
+        window.showNotification("Input Error", "Please select a Payment Method.");
+        return;
+      }
+
+      // Display payment modal
+      checkoutSummary.innerHTML = `
+        <strong>CNG Station:</strong> ${pump}<br>
+        <strong>Date & Time:</strong> ${date} at ${selectedTimeSlot}<br>
+        <strong>Vehicle No:</strong> ${user.vehicleno}<br>
+        <strong>Advance Payment Mode:</strong> ${payment}
+      `;
+
+      if (payment === "UPI") {
+        cardInputs.style.display = "none";
+        upiQR.style.display = "block";
+        drawMockUPIQR();
+      } else {
+        upiQR.style.display = "none";
+        cardInputs.style.display = "block";
+      }
+
+      checkoutModal.style.display = "flex";
+    });
+
+    // Close payment modal
+    cancelPayBtn.addEventListener("click", () => {
+      checkoutModal.style.display = "none";
+    });
+
+    // Finalize payment & booking
+    confirmPayBtn.addEventListener("click", () => {
+      const payment = document.getElementById("paymentSelect").value;
+
+      // Form validation for cards
+      if (payment === "Card") {
+        const cardNum = document.getElementById("cardNum").value.trim();
+        const cardExpiry = document.getElementById("cardExpiry").value.trim();
+        const cardCVV = document.getElementById("cardCVV").value.trim();
+
+        if (cardNum.length !== 16 || isNaN(cardNum)) {
+          alert("Please enter a valid 16-digit card number.");
+          return;
+        }
+        if (!cardExpiry.includes("/")) {
+          alert("Please enter expiry in MM/YY format.");
+          return;
+        }
+        if (cardCVV.length !== 3 || isNaN(cardCVV)) {
+          alert("Please enter a valid 3-digit CVV.");
+          return;
+        }
+      }
+
+      // Process DB insertion
+      const bookingData = {
+        fullname: document.getElementById("fullname").value,
+        contact: document.getElementById("contact").value,
+        vehicleno: document.getElementById("vehicleno").value,
+        pump: pumpSelect.value,
+        date: dateSelect.value,
+        time: selectedTimeSlot,
+        payment: payment
+      };
+
+      const result = window.CNG_DB.addBooking(bookingData);
+
+      checkoutModal.style.display = "none";
+
+      if (result.success) {
+        // Redirect to confirmation screen with booking id parameter
+        window.location.href = `confirmation.html?id=${result.booking.id}`;
+      } else {
+        window.showNotification("Booking Failed", result.message);
+      }
+    });
+
+    // Canvas mock QR code drawer
+    function drawMockUPIQR() {
+      const canvas = document.getElementById("upiQRCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw standard mock QR look
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, 140, 140);
+
+      // Center cutout
+      ctx.fillStyle = "white";
+      ctx.fillRect(8, 8, 124, 124);
+
+      // QR position anchor squares (top-left, top-right, bottom-left)
+      ctx.fillStyle = "black";
+      // Top Left
+      ctx.fillRect(15, 15, 30, 30);
+      ctx.fillStyle = "white";
+      ctx.fillRect(20, 20, 20, 20);
+      ctx.fillStyle = "black";
+      ctx.fillRect(24, 24, 12, 12);
+
+      // Top Right
+      ctx.fillRect(95, 15, 30, 30);
+      ctx.fillStyle = "white";
+      ctx.fillRect(100, 20, 20, 20);
+      ctx.fillStyle = "black";
+      ctx.fillRect(104, 24, 12, 12);
+
+      // Bottom Left
+      ctx.fillRect(15, 95, 30, 30);
+      ctx.fillStyle = "white";
+      ctx.fillRect(20, 100, 20, 20);
+      ctx.fillStyle = "black";
+      ctx.fillRect(24, 104, 12, 12);
+
+      // Draw random noise matrix squares inside the rest
+      ctx.fillStyle = "black";
+      for (let x = 50; x < 90; x += 10) {
+        for (let y = 15; y < 90; y += 10) {
+          if (Math.random() > 0.45) ctx.fillRect(x, y, 6, 6);
+        }
+      }
+      for (let x = 15; x < 125; x += 10) {
+        for (let y = 90; y < 125; y += 10) {
+          if (x < 50 && y > 90) continue; // bottom-left anchor protection
+          if (Math.random() > 0.45) ctx.fillRect(x, y, 6, 6);
+        }
+      }
+
+      // Add a small green center badge with a checkmark
+      ctx.fillStyle = "#2e8b57";
+      ctx.beginPath();
+      ctx.arc(70, 70, 12, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(65, 70);
+      ctx.lineTo(69, 74);
+      ctx.lineTo(76, 66);
+      ctx.stroke();
+    }
+  </script>
+</body>
+
+</html>
