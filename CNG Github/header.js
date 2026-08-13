@@ -25,7 +25,7 @@
     if (!headerEl) return;
 
     const loggedInUser = window.CNG_DB ? window.CNG_DB.getLoggedInUser() : null;
-    const currentPath = window.location.pathname.split("/").pop() || "home.html";
+    const currentPath = window.location.pathname.split("/").pop() || "index.html";
 
     // Build nav HTML dynamically
     let navHTML = `<a href="index.html" class="${currentPath === 'index.html' ? 'active' : ''}">Home</a>`;
@@ -66,7 +66,7 @@
         if (window.CNG_DB) {
           window.CNG_DB.logout();
           showNotification("Success", "Logged out successfully!", () => {
-            window.location.href = "home.html";
+            window.location.href = "index.html";
           });
         }
       });
