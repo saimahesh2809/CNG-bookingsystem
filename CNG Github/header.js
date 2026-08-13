@@ -28,7 +28,7 @@
     const currentPath = window.location.pathname.split("/").pop() || "home.html";
 
     // Build nav HTML dynamically
-    let navHTML = `<a href="home.html" class="${currentPath === 'home.html' ? 'active' : ''}">Home</a>`;
+    let navHTML = `<a href="index.html" class="${currentPath === 'index.html' ? 'active' : ''}">Home</a>`;
 
     if (!loggedInUser) {
       navHTML += `<a href="login_register.html" class="${currentPath === 'login_register.html' ? 'active' : ''}">Login/Register</a>`;
