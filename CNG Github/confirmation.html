@@ -181,7 +181,7 @@
 
       if (!bookingId || !window.CNG_DB) {
         window.showNotification("Error", "No booking details found.", () => {
-          window.location.href = "home.html";
+          window.location.href = "index.html";
         });
         return;
       }
@@ -189,7 +189,7 @@
       const booking = window.CNG_DB.getBookingById(bookingId);
       if (!booking) {
         window.showNotification("Error", "Invalid Booking reference.", () => {
-          window.location.href = "home.html";
+          window.location.href = "index.html";
         });
         return;
       }
